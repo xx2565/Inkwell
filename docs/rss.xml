@@ -1,5 +1,48 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://xx2565.github.io/Inkwell</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://xx2565.github.io/Inkwell</link></image><lastBuildDate>Sun, 25 Jan 2026 08:57:40 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>gpu coding&amp;arch</title><link>https://xx2565.github.io/Inkwell/post/gpu%20coding%26arch.html</link><description># gemm
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://xx2565.github.io/Inkwell</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://xx2565.github.io/Inkwell</link></image><lastBuildDate>Fri, 06 Feb 2026 08:12:15 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>【vllm】 线上模式</title><link>https://xx2565.github.io/Inkwell/post/%E3%80%90vllm%E3%80%91%20-xian-shang-mo-shi.html</link><description># APIserver在框架中的作用
+## 调用链路
+vLLM的online serving采用分层架构，从HTTP接口到核心推理引擎的完整链路如下：
+
+客户端请求 → HTTP服务器 → API路由 → 服务层 → 引擎客户端 → 核心引擎 → 推理执行
+
+具体文件链路：
+examples/online_serving/openai_chat_completion_client.py (客户端)
+    ↓
+vllm/entrypoints/openai/api_server.py (HTTP服务器入口)          压测其服务的文件地址
+    ↓  
+vllm/entrypoints/openai/chat_completion/api_router.py (API路由)
+    ↓
+vllm/entrypoints/openai/chat_completion/serving.py (服务层)
+    ↓
+vllm/v1/engine/async_llm.py (异步引擎客户端)
+    ↓
+vllm/v1/engine/core_client.py (引擎核心客户端)
+    ↓
+vllm/v1/engine/core.py (核心引擎)
+    ↓
+vllm/v1/executor/ (推理执行器)
+
+
+客户端 (examples/online_serving/openai_chat_completion_client.py)
+    ↓ HTTP请求到 http://localhost:8000/v1/chat/completions
+服务器 (vllm/entrypoints/openai/api_server.py)
+    ↓ 路由到 vllm/entrypoints/openai/chat_completion/api_router.py
+    ↓ 调用 vllm/entrypoints/openai/chat_completion/serving.py
+    ↓ 委托给 vllm/v1/engine/async_llm.py
+
+## 服务模式和程序模式的区别：
+场景 1：前端网页要用模型👉 那只能走 HTTP  
+场景 2：很多人同时用模型👉 模型必须只加载一次  
+场景 3：模型要一直开着（7×24）👉 不适合做服务  
+API Server 就是为了解决上面这些问题  
+
+## 什么是 FastAPI？
+如果没有 FastAPI，你要手写很多麻烦的东西：
+解析 HTTP
+解析 JSON
+校验参数
+返回结果
+FastAPI 帮你全做了。</description><guid isPermaLink="true">https://xx2565.github.io/Inkwell/post/%E3%80%90vllm%E3%80%91%20-xian-shang-mo-shi.html</guid><pubDate>Fri, 06 Feb 2026 08:11:47 +0000</pubDate></item><item><title>gpu coding&amp;arch</title><link>https://xx2565.github.io/Inkwell/post/gpu%20coding%26arch.html</link><description># gemm
 ```c++
 #include &lt;cuda_runtime.h&gt;
 #include &lt;stdio.h&gt;
